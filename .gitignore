@@ -104,6 +104,7 @@ dist
 .tern-port
 
 *.js
+*.d.ts
 
 # CDK asset staging directory
 .cdk.staging
