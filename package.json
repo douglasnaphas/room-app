@@ -1,6 +1,11 @@
 {
   "name": "room-app",
   "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/douglasnaphas/room-app"
+  },
+  "license": "Apache-2.0",
   "bin": {
     "room-app": "bin/room-app.js"
   },
