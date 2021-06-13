@@ -1,6 +1,8 @@
 import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as apigw from "@aws-cdk/aws-apigateway";
+import * as apigwv2 from "@aws-cdk/aws-apigatewayv2";
+import * as apigwv2i from "@aws-cdk/aws-apigatewayv2-integrations";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as cloudfront from "@aws-cdk/aws-cloudfront";
 import * as route53 from "@aws-cdk/aws-route53";
@@ -50,6 +52,30 @@ export class RoomAppStack extends cdk.Stack {
       handler: fn,
     });
 
+    const webSocketApi = new apigwv2.WebSocketApi(this, "RoomAppWS", {
+      connectRouteOptions: {
+        integration: new apigwv2i.LambdaWebSocketIntegration({
+          handler: fn,
+        }),
+      },
+      disconnectRouteOptions: {
+        integration: new apigwv2i.LambdaWebSocketIntegration({
+          handler: fn,
+        }),
+      },
+      defaultRouteOptions: {
+        integration: new apigwv2i.LambdaWebSocketIntegration({
+          handler: fn,
+        }),
+      },
+    });
+
+    new apigwv2.WebSocketStage(this, "ProdStage", {
+      webSocketApi,
+      stageName: "prod",
+      autoDeploy: true,
+    });
+
     const frontendBucket = new s3.Bucket(this, "FrontendBucket");
 
     let hostedZone, wwwDomainName, certificate, domainNames;
@@ -92,6 +118,9 @@ export class RoomAppStack extends cdk.Stack {
     });
     new cdk.CfnOutput(this, "DistributionDomainName", {
       value: distro.distributionDomainName,
+    });
+    new cdk.CfnOutput(this, "WSAPIEndpoint", {
+      value: webSocketApi.apiEndpoint,
     });
   }
 }
