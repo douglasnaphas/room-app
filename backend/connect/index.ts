@@ -15,9 +15,11 @@ exports.connect = async (event: any, context: any) => {
 exports.disconnect = async (event: any, context: any) => {
   console.log("disconnected");
   logEventAndContext(event, context);
+  return { statusCode: 200 };
 };
 
 exports.default = async (event: any, context: any) => {
   console.log("defaulted");
   logEventAndContext(event, context);
+  return { statusCode: 200 };
 };
