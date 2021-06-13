@@ -26,6 +26,8 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
+    "@aws-cdk/aws-apigateway": "^1.108.1",
+    "@aws-cdk/aws-lambda": "^1.108.1",
     "@aws-cdk/core": "1.108.1",
     "@cdk-turnkey/stackname": "^1.2.0",
     "aws-sdk": "^2.927.0",
