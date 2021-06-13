@@ -110,3 +110,8 @@ dist
 cdk.out
 
 .DS_Store
+
+# Not using TypeScript yet in:
+!frontend/*.js
+!frontend/**.js
+!frontend/**/*.js
