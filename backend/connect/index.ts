@@ -9,6 +9,7 @@ const logEventAndContext = (event: any, context: any) => {
 exports.connect = (event: any, context: any) => {
   console.log("connected");
   logEventAndContext(event, context);
+  return 200;
 };
 
 exports.disconnect = (event: any, context: any) => {
