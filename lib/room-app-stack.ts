@@ -37,9 +37,29 @@ export class RoomAppStack extends cdk.Stack {
       googleClientSecret,
     } = props;
 
-    const fn = new lambda.Function(this, "ConnectionHandler", {
+    const connectFn = new lambda.Function(this, "ConnectionHandler", {
       runtime: lambda.Runtime.NODEJS_14_X,
-      handler: "index.handler",
+      handler: "index.connect",
+      code: lambda.Code.fromAsset("backend/connect"),
+      memorySize: 3000,
+      environment: {
+        NODE_ENV: "production",
+      },
+      timeout: cdk.Duration.seconds(20),
+    });
+    const disconnectFn = new lambda.Function(this, "DisonnectionHandler", {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      handler: "index.disconnect",
+      code: lambda.Code.fromAsset("backend/connect"),
+      memorySize: 3000,
+      environment: {
+        NODE_ENV: "production",
+      },
+      timeout: cdk.Duration.seconds(20),
+    });
+    const defaultFn = new lambda.Function(this, "DefaultHandler", {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      handler: "index.default",
       code: lambda.Code.fromAsset("backend/connect"),
       memorySize: 3000,
       environment: {
@@ -49,23 +69,23 @@ export class RoomAppStack extends cdk.Stack {
     });
 
     const lambdaApi = new apigw.LambdaRestApi(this, "Endpoint", {
-      handler: fn,
+      handler: defaultFn,
     });
 
     const webSocketApi = new apigwv2.WebSocketApi(this, "RoomAppWS", {
       connectRouteOptions: {
         integration: new apigwv2i.LambdaWebSocketIntegration({
-          handler: fn,
+          handler: connectFn,
         }),
       },
       disconnectRouteOptions: {
         integration: new apigwv2i.LambdaWebSocketIntegration({
-          handler: fn,
+          handler: disconnectFn,
         }),
       },
       defaultRouteOptions: {
         integration: new apigwv2i.LambdaWebSocketIntegration({
-          handler: fn,
+          handler: defaultFn,
         }),
       },
     });
