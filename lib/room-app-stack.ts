@@ -1,6 +1,11 @@
 import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as apigw from "@aws-cdk/aws-apigateway";
+import * as s3 from "@aws-cdk/aws-s3";
+import * as cloudfront from "@aws-cdk/aws-cloudfront";
+import * as route53 from "@aws-cdk/aws-route53";
+import * as acm from "@aws-cdk/aws-certificatemanager";
+import * as origins from "@aws-cdk/aws-cloudfront-origins";
 
 export interface RoomAppProps extends cdk.StackProps {
   fromAddress?: string;
@@ -43,6 +48,50 @@ export class RoomAppStack extends cdk.Stack {
 
     const lambdaApi = new apigw.LambdaRestApi(this, "Endpoint", {
       handler: fn,
+    });
+
+    const frontendBucket = new s3.Bucket(this, "FrontendBucket");
+
+    let hostedZone, wwwDomainName, certificate, domainNames;
+    if (domainName && zoneId) {
+      hostedZone = route53.HostedZone.fromHostedZoneAttributes(
+        this,
+        "HostedZone",
+        { hostedZoneId: zoneId, zoneName: domainName + "." }
+      );
+      wwwDomainName = "www." + domainName;
+      certificate = new acm.Certificate(this, "Certificate", {
+        domainName,
+        subjectAlternativeNames: [wwwDomainName],
+        validation: acm.CertificateValidation.fromDns(hostedZone),
+      });
+      domainNames = [domainName, wwwDomainName];
+    }
+
+    const distroProps: any = {
+      logBucket: new s3.Bucket(this, "DistroLoggingBucket"),
+      logFilePrefix: "distribution-access-logs/",
+      logIncludesCookies: true,
+      defaultBehavior: {
+        origin: new origins.S3Origin(frontendBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+      },
+      defaultRootObject: "index.html",
+      domainNames,
+      certificate,
+    };
+
+    const distro = new cloudfront.Distribution(this, "Distro", distroProps);
+
+    new cdk.CfnOutput(this, "FrontendBucketName", {
+      value: frontendBucket.bucketName,
+    });
+    new cdk.CfnOutput(this, "lambdaApiUrl", {
+      value: lambdaApi.url,
+    });
+    new cdk.CfnOutput(this, "DistributionDomainName", {
+      value: distro.distributionDomainName,
     });
   }
 }
